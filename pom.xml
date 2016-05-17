@@ -49,7 +49,7 @@
 							<artifactId>hapi-fhir-testpage-overlay</artifactId>
 						</overlay>
 					</overlays>
-					<warName>fhir-personnel</warName>
+					<warName>personnel</warName>
 				</configuration>
 			</plugin>
 			<!-- usage of jax-ws maven plugin -->
