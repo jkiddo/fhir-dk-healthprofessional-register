@@ -9,6 +9,8 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.narrative.DefaultThymeleafNarrativeGenerator;
 import ca.uhn.fhir.narrative.INarrativeGenerator;
+import ca.uhn.fhir.rest.method.BaseMethodBinding;
+import ca.uhn.fhir.rest.method.RequestDetails;
 import ca.uhn.fhir.rest.server.IResourceProvider;
 import ca.uhn.fhir.rest.server.RestfulServer;
 import ca.uhn.fhir.rest.server.interceptor.ResponseHighlighterInterceptor;
@@ -27,7 +29,7 @@ public class FhirRestfulServlet extends RestfulServer
 	 */
 	public FhirRestfulServlet()
 	{
-		super(FhirContext.forDstu2()); // Support DSTU2
+		super(FhirContext.forDstu3()); // Support DSTU2
 	}
 
 	/**
@@ -64,6 +66,10 @@ public class FhirRestfulServlet extends RestfulServer
 		setServerName("SST on FHIR © Jens Kristian Villadsen");
 		
         registerInterceptor(new ResponseHighlighterInterceptor());
-
+	}
+	
+	@Override
+	public BaseMethodBinding<?> determineResourceMethod(RequestDetails requestDetails, String requestPath) {
+		return super.determineResourceMethod(requestDetails, requestPath);
 	}
 }

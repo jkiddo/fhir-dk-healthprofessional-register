@@ -2,32 +2,33 @@ package dk.fhir.practitioner;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Context;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.hl7.fhir.dstu3.model.CodeableConcept;
+import org.hl7.fhir.dstu3.model.Coding;
+import org.hl7.fhir.dstu3.model.HumanName;
+import org.hl7.fhir.dstu3.model.IdType;
+import org.hl7.fhir.dstu3.model.Practitioner;
+import org.hl7.fhir.dstu3.model.Practitioner.PractitionerPractitionerRoleComponent;
+import org.hl7.fhir.dstu3.model.StringType;
+import org.hl7.fhir.dstu3.model.UriType;
 import org.joda.time.DateTime;
-
-import ca.uhn.fhir.model.dstu2.composite.CodeableConceptDt;
-import ca.uhn.fhir.model.dstu2.composite.CodingDt;
-import ca.uhn.fhir.model.dstu2.composite.HumanNameDt;
-import ca.uhn.fhir.model.dstu2.resource.Practitioner;
-import ca.uhn.fhir.model.dstu2.resource.Practitioner.PractitionerRole;
-import ca.uhn.fhir.model.primitive.IdDt;
-import ca.uhn.fhir.model.primitive.StringDt;
-import ca.uhn.fhir.model.primitive.UriDt;
-import ca.uhn.fhir.rest.annotation.IdParam;
-import ca.uhn.fhir.rest.annotation.Read;
-import ca.uhn.fhir.rest.annotation.RequiredParam;
-import ca.uhn.fhir.rest.annotation.Search;
-import ca.uhn.fhir.rest.server.IResourceProvider;
-import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 
+import ca.uhn.fhir.rest.annotation.IdParam;
+import ca.uhn.fhir.rest.annotation.Read;
+import ca.uhn.fhir.rest.annotation.RequiredParam;
+import ca.uhn.fhir.rest.annotation.Search;
+import ca.uhn.fhir.rest.server.IResourceProvider;
+import ca.uhn.fhir.rest.server.exceptions.UnprocessableEntityException;
 import dk.sst.AutRegService;
 import dk.sst.AutRegServiceSoap;
 import dk.sst.AuthorizationStatus;
@@ -58,8 +59,11 @@ public class PractitionerResourceProvider implements IResourceProvider
 	 *            This operation takes one parameter which is the search criteria. It is annotated with the "@Required" annotation. This annotation takes one argument, a string containing the name of the search criteria. The datatype here is StringDt, but there are other possible parameter types depending on the specific search criteria.
 	 * @return This method returns a list of Patients. This list may contain multiple matching resources, or it may also be empty.
 	 */
+	
+	@Context HttpServletRequest request;
+	
 	@Search()
-	public List<Practitioner> findPractitionersByName(@RequiredParam(name = Practitioner.SP_NAME) final StringDt theName)
+	public List<Practitioner> findPractitionersByName(@RequiredParam(name = Practitioner.SP_NAME) final StringType theName)
 	{
 		if(theName.getValueAsString().length() > 4)
 		{
@@ -95,7 +99,7 @@ public class PractitionerResourceProvider implements IResourceProvider
 	 * @return Returns a resource matching this identifier, or null if none exists.
 	 */
 	@Read(version = false)
-	public Practitioner readPractitioner(@IdParam final IdDt theId)
+	public Practitioner readPractitioner(@IdParam final IdType theId)
 	{
 		if(theId.getIdPart().length() == 5)
 		{
@@ -120,27 +124,24 @@ public class PractitionerResourceProvider implements IResourceProvider
 				{
 					final Practitioner practitioner = new Practitioner();
 					practitioner.addIdentifier();
-					practitioner.getIdentifierFirstRep().setSystem(new UriDt("http://sst.dk"));
+					practitioner.getIdentifierFirstRep().setSystemElement(new UriType("http://sst.dk"));
 					practitioner.getIdentifierFirstRep().setValue(input.getAuthorizationID());
-					practitioner.setId(new IdDt(input.getAuthorizationID()));
-					practitioner.setName(new HumanNameDt());
-					practitioner.getName().setGiven(Lists.newArrayList(new StringDt(input.getFirstName())));
-					practitioner.getName().setFamily(Lists.newArrayList(new StringDt(input.getLastName())));
-					final PractitionerRole practitionerRole = new Practitioner.PractitionerRole();
+					practitioner.setId(new IdType(input.getAuthorizationID()));
+					practitioner.setName(Lists.newArrayList(new HumanName().addGiven(input.getFirstName()).addFamily(input.getLastName())));
+					final PractitionerPractitionerRoleComponent practitionerRole = new PractitionerPractitionerRoleComponent();
 					for(final HealthProfessionalSpeciality i : input.getSpecialities().getHealthProfessionalSpeciality())
 					{
 						if(!Strings.isNullOrEmpty(i.getSpeciality().getSpecialityName()))
 						{
-							final CodingDt coding = new CodingDt("http://sst.dk", i.getSpeciality().getSpecialityName());
+							final Coding coding = new Coding("http://sst.dk", i.getSpeciality().getSpecialityName(), i.getSpeciality().getSpecialityName());
 							practitionerRole.addSpecialty().setCoding(Lists.newArrayList(coding));
 						}
 					}
 					if("Læge".equals(input.getProfessionCodeName()))
-						practitionerRole.setRole(new CodeableConceptDt("http://sst.dk", "Doctor"));
+						practitionerRole.setRole(new CodeableConcept().addCoding(new Coding("http://sst.dk", "Doctor", "Doctor")));
 					if("Sygeplejerske".equals(input.getProfessionCodeName()))
-						practitionerRole.setRole(new CodeableConceptDt("http://sst.dk", "Nurse"));
-
-					practitioner.setPractitionerRole(Lists.newArrayList(practitionerRole));
+						practitionerRole.setRole(new CodeableConcept().addCoding(new Coding("http://sst.dk", "Nurse", "Nurse")));
+					practitioner.addPractitionerRole(practitionerRole);
 					return practitioner;
 				}
 			}).toList();
