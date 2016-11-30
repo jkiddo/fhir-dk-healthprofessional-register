@@ -8,18 +8,14 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.hl7.fhir.dstu3.model.CodeableConcept;
-import org.hl7.fhir.dstu3.model.Coding;
 import org.hl7.fhir.dstu3.model.HumanName;
 import org.hl7.fhir.dstu3.model.IdType;
 import org.hl7.fhir.dstu3.model.Practitioner;
-import org.hl7.fhir.dstu3.model.Practitioner.PractitionerPractitionerRoleComponent;
 import org.hl7.fhir.dstu3.model.StringType;
 import org.hl7.fhir.dstu3.model.UriType;
 import org.joda.time.DateTime;
 
 import com.google.common.base.Function;
-import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 
@@ -33,7 +29,6 @@ import dk.sst.AutRegService;
 import dk.sst.AutRegServiceSoap;
 import dk.sst.AuthorizationStatus;
 import dk.sst.HealthProfessional;
-import dk.sst.HealthProfessionalSpeciality;
 import dk.sst.SeventyFiveYearsRule;
 
 /**
@@ -50,7 +45,8 @@ public class PractitionerResourceProvider implements IResourceProvider
 	 * Constructor, which pre-populates the provider with one resource instance.
 	 */
 	public PractitionerResourceProvider() throws DatatypeConfigurationException
-	{}
+	{
+	}
 
 	/**
 	 * The "@Search" annotation indicates that this method supports the search operation. You may have many different method annotated with this annotation, to support many different search criteria. This example searches by family name.
@@ -128,20 +124,20 @@ public class PractitionerResourceProvider implements IResourceProvider
 					practitioner.getIdentifierFirstRep().setValue(input.getAuthorizationID());
 					practitioner.setId(new IdType(input.getAuthorizationID()));
 					practitioner.setName(Lists.newArrayList(new HumanName().addGiven(input.getFirstName()).addFamily(input.getLastName())));
-					final PractitionerPractitionerRoleComponent practitionerRole = new PractitionerPractitionerRoleComponent();
-					for(final HealthProfessionalSpeciality i : input.getSpecialities().getHealthProfessionalSpeciality())
-					{
-						if(!Strings.isNullOrEmpty(i.getSpeciality().getSpecialityName()))
-						{
-							final Coding coding = new Coding("http://sst.dk", i.getSpeciality().getSpecialityName(), i.getSpeciality().getSpecialityName());
-							practitionerRole.addSpecialty().setCoding(Lists.newArrayList(coding));
-						}
-					}
-					if("Læge".equals(input.getProfessionCodeName()))
-						practitionerRole.setRole(new CodeableConcept().addCoding(new Coding("http://sst.dk", "Doctor", "Doctor")));
-					if("Sygeplejerske".equals(input.getProfessionCodeName()))
-						practitionerRole.setRole(new CodeableConcept().addCoding(new Coding("http://sst.dk", "Nurse", "Nurse")));
-					practitioner.addPractitionerRole(practitionerRole);
+//					final PractitionerPractitionerRoleComponent practitionerRole = new PractitionerPractitionerRoleComponent();
+//					for(final HealthProfessionalSpeciality i : input.getSpecialities().getHealthProfessionalSpeciality())
+//					{
+//						if(!Strings.isNullOrEmpty(i.getSpeciality().getSpecialityName()))
+//						{
+//							final Coding coding = new Coding("http://sst.dk", i.getSpeciality().getSpecialityName(), i.getSpeciality().getSpecialityName());
+//							practitionerRole.addSpecialty().setCoding(Lists.newArrayList(coding));
+//						}
+//					}
+//					if("Læge".equals(input.getProfessionCodeName()))
+//						practitionerRole.setRole(new CodeableConcept().addCoding(new Coding("http://sst.dk", "Doctor", "Doctor")));
+//					if("Sygeplejerske".equals(input.getProfessionCodeName()))
+//						practitionerRole.setRole(new CodeableConcept().addCoding(new Coding("http://sst.dk", "Nurse", "Nurse")));
+//					practitioner.addPractitionerRole(practitionerRole);
 					return practitioner;
 				}
 			}).toList();

@@ -29,7 +29,7 @@ public class FhirRestfulServlet extends RestfulServer
 	 */
 	public FhirRestfulServlet()
 	{
-		super(FhirContext.forDstu3()); // Support DSTU2
+		super(FhirContext.forDstu3()); 
 	}
 
 	/**

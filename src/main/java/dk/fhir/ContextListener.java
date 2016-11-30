@@ -6,6 +6,8 @@ import javax.inject.Singleton;
 
 import org.ebaysf.web.cors.CORSFilter;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.servlet.DispatcherServlet;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -33,6 +35,11 @@ public class ContextListener extends GuiceServletContextListener {
 								.join(CharsetResponseFilter.class.getName(), GZIPContentEncodingFilter.class.getName()))
 						.build();
 				serve("/model/*").with(FhirRestfulServlet.class, params);
+				bind(DispatcherServlet.class).in(Singleton.class);
+				serve("/ui/*").with(DispatcherServlet.class,
+						ImmutableMap.<String, String> builder()
+								.put("contextClass", AnnotationConfigWebApplicationContext.class.getName())
+								.put("contextConfigLocation", dk.fhir.FhirTesterConfig.class.getName()).build());
 				bind(CORSFilter.class).in(Singleton.class);
 				filter("/*").through(CORSFilter.class);
 			}

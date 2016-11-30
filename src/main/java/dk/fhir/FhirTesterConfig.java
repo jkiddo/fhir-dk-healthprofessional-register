@@ -1,12 +1,18 @@
 package dk.fhir;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
+import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.context.FhirVersionEnum;
+import ca.uhn.fhir.rest.client.IGenericClient;
+import ca.uhn.fhir.rest.client.interceptor.BasicAuthInterceptor;
 import ca.uhn.fhir.to.FhirTesterMvcConfig;
 import ca.uhn.fhir.to.TesterConfig;
+import ca.uhn.fhir.util.ITestingUiClientFactory;
  
 //@formatter:off
 /**
@@ -41,20 +47,40 @@ public class FhirTesterConfig {
         retVal
             .addServer()
                 .withId("home")
-                .withFhirVersion(FhirVersionEnum.DSTU2)
+                .withFhirVersion(FhirVersionEnum.DSTU3)
                 .withBaseUrl("${serverBase}/model/")
                 .withName("Local Tester")
             .addServer()
                 .withId("hapi")
-                .withFhirVersion(FhirVersionEnum.DSTU2)
-                .withBaseUrl("http://fhirtest.uhn.ca/baseDstu2")
-                .withName("Public HAPI Test Server");
-         
+                .withFhirVersion(FhirVersionEnum.DSTU3)
+                .withBaseUrl("http://fhirtest.uhn.ca/baseDstu3")
+                .withName("Public HAPI Test Server")
+        .addServer()
+	        .withId("bp")
+	        .withFhirVersion(FhirVersionEnum.DSTU2)
+	        .withBaseUrl("http://default-environment.mhy4cxavn9.eu-west-1.elasticbeanstalk.com/hl7fhir/")
+	        .withName("Bookplan Test Server");
+        ITestingUiClientFactory clientFactory = new ITestingUiClientFactory()
+        {
+
+			@Override
+			public IGenericClient newClient(FhirContext theFhirContext, HttpServletRequest theRequest,
+					String theServerBaseUrl) {
+				   // Create a client
+			      IGenericClient client = theFhirContext.newRestfulGenericClient(theServerBaseUrl);
+			      
+			      // Register an interceptor which adds credentials
+			      client.registerInterceptor(new BasicAuthInterceptor("username", "password"));
+			      
+			      return client;
+			}
+        	
+        };
         /*
          * Use the method below to supply a client "factory" which can be used
          * if your server requires authentication
          */
-        // retVal.setClientFactory(clientFactory);
+         retVal.setClientFactory(clientFactory);
          
         return retVal;
     }
